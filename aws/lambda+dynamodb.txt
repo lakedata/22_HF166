@@ -1,0 +1,93 @@
+import sys
+import json
+import boto3
+from boto3.dynamodb.conditions import Key
+import logging
+# import pickle, requests, base64
+# from urllib import parse
+
+logger = logging.getLogger() # cloudwatch에서 로그 보기
+logger.setLevel(logging.INFO)
+
+
+
+# connect DynamoDB
+try:
+    dynamodb = boto3.resource('dynamodb', region_name='ap-northeast-2', endpoint_url='http://dynamodb.ap-northeast-2.amazonaws.com')
+    # dynamodb = boto3.client('dynamodb')
+except:
+    logging.error('could not connect to dynamodb')
+    sys.exit(1)
+    
+
+# SimpleText 메시지
+def simple_text(msg):
+    return {
+        "simpleText": {
+            "text": msg
+        }
+    }
+
+# 챗봇 메시지
+def message(outputs):
+    return {
+        "version": "2.0",
+        "template": {
+            "outputs": 
+                outputs
+                
+        }
+    }
+
+# 최종 json response
+def json_result(result):
+    return {
+        'statusCode': 200,
+        'body': json.dumps(result),
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+        }
+    }
+    
+def lambda_handler(event, context):
+    
+    request_body = json.loads(event['body'])
+    logger.info(request_body)
+    params = request_body['action']['params']
+    input = params['schedule_name']
+    
+    name = input
+     # 메시지 결과 저장
+    temp = []
+    
+    if name == "일정" :
+        info_text = "궁금한 일정을 검색하세요!"
+    else :
+        table = dynamodb.Table('chat_schedule2')
+        response = table.query(
+            KeyConditionExpression=Key('content').eq(name)
+            )
+        
+            
+        # items = response['Items'][0]
+        
+        year = response['Items'][0]['year']
+        month = response['Items'][0]['month']
+        day = response['Items'][0]['day']
+        
+       
+        info_text = "📆 {} 일정은 \n {}.{}.{} 입니다.".format(name, year, month, day)
+    
+    temp_text = simple_text(info_text)
+    # temp_text = simple_text("선택한 일정은 {} 입니다.".format(input))
+    temp.append(temp_text)
+    # temp2 = []
+    # temp_text2 = {
+    #     "year":{}.format(year),
+    #     "month":{}.format(month),
+    #     "day":{}.format(day)
+    # }
+    # temp2.append(temp_text2)
+    result = message(temp)
+        
+    return json_result(result)
