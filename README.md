@@ -11,3 +11,5 @@
 
 #### 테스트 
 <img width="657" alt="스크린샷 2023-08-23 오후 9 54 37" src="https://github.com/lakedata/22_HF166/assets/94455716/1705680d-7611-413c-94b7-eff3e7663397">
+
+시연영상:https://youtu.be/1a8ZDE2cdn4?si=0zbrbCNcpkxguHtj
